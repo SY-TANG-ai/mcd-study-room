@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麦麦自习室 · 21 天实录</title>
+<style>
+  /* ── 配色：麦当劳的红与黄，纸是暖白 ───────────────── */
+  :root{
+    --red:#DA291C;
+    --red-deep:#A81810;
+    --yellow:#FFC72C;
+    --ink:#241C16;
+    --ink-soft:#6B5F55;
+    --paper:#FFFCF5;
+    --card:#FFFFFF;
+    --line:#E9E1D4;
+    --gray:#C9CDD4;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{ max-width:880px; margin:0 auto; padding:0 24px; }
+
+  /* ── 顶部 ──────────────────────────────────────── */
+  .hero{
+    background:var(--red);
+    color:#fff;
+    padding:64px 0 56px;
+    position:relative;
+    overflow:hidden;
+  }
+  /* 一层斜纹，像招牌的边 */
+  .hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(
+      -45deg, rgba(255,255,255,.05) 0 14px, transparent 14px 28px);
+    pointer-events:none;
+  }
+  .hero .wrap{ position:relative; z-index:1; }
+  .hero .tag{
+    display:inline-block;
+    background:var(--yellow);
+    color:var(--red-deep);
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.14em;
+    padding:5px 12px;
+    border-radius:3px;
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:44px;
+    line-height:1.15;
+    font-weight:800;
+    letter-spacing:-.01em;
+  }
+  .hero h1 em{ font-style:normal; color:var(--yellow); }
+  .hero p{
+    margin-top:16px;
+    font-size:16px;
+    color:rgba(255,255,255,.82);
+    max-width:520px;
+  }
+
+  /* ── 数字条 ────────────────────────────────────── */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    margin-top:-32px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 8px 28px rgba(36,28,22,.07);
+  }
+  .stat{ padding:22px 18px; border-right:1px solid var(--line); }
+  .stat:last-child{ border-right:none; }
+  .stat .n{
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.1;
+  }
+  .stat .n small{ font-size:14px; font-weight:600; color:var(--ink-soft); margin-left:2px; }
+  .stat .k{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    letter-spacing:.04em;
+  }
+
+  /* ── 区块 ──────────────────────────────────────── */
+  section{ padding:56px 0 8px; }
+  .sec-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:6px; }
+  .sec-head h2{ font-size:23px; font-weight:800; letter-spacing:-.01em; }
+  .sec-head .idx{
+    font-size:12px;
+    font-weight:700;
+    color:var(--red);
+    letter-spacing:.1em;
+    border:1px solid var(--red);
+    border-radius:3px;
+    padding:1px 6px;
+    transform:translateY(-2px);
+  }
+  .sec-sub{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+  }
+
+  /* ── 打卡热力图 ─────────────────────────────────── */
+  .heat{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px 22px 18px;
+  }
+  .heat-scroll{ overflow-x:auto; padding-bottom:4px; }
+  .heat-grid{
+    display:grid;
+    grid-template-columns:46px repeat(21,22px);
+    grid-template-rows:18px repeat(3,22px) 20px;
+    gap:5px;
+    min-width:620px;
+  }
+  .heat-grid .lbl{
+    font-size:10px;
+    color:var(--ink-soft);
+    display:flex; align-items:center;
+    white-space:nowrap;
+  }
+  .heat-grid .lbl.name{ font-weight:600; color:var(--ink); justify-content:flex-end; padding-right:8px; }
+  .heat-grid .dt{
+    font-size:9px;
+    color:var(--ink-soft);
+    text-align:center;
+    white-space:nowrap;
+  }
+  .cell{
+    border-radius:3px;
+    cursor:default;
+    transition:transform .12s ease;
+  }
+  .cell:hover{ transform:scale(1.18); }
+  .c1{ background:var(--red); }                                    /* 完成 */
+  .c2{ background:var(--yellow); }                                 /* 算完成 */
+  .c3{ background:repeating-linear-gradient(-45deg,#D9D3C7 0 3px,#F2EDE3 3px 6px); } /* 请假 */
+  .c4{ background:#fff; box-shadow:inset 0 0 0 1.5px var(--red); } /* 未完成 */
+  .c0{ background:#F4F0E8; box-shadow:inset 0 0 0 1px #E4DDD0; }   /* 未交 */
+
+  .legend{
+    display:flex; flex-wrap:wrap; gap:16px;
+    margin-top:16px; padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:12px; color:var(--ink-soft);
+  }
+  .legend span{ display:flex; align-items:center; gap:6px; }
+  .legend i{ width:12px; height:12px; border-radius:3px; display:inline-block; }
+
+  /* ── 账单 ──────────────────────────────────────── */
+  .bills{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .bill{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 22px;
+    position:relative;
+  }
+  /* 小票的上沿锯齿 */
+  .bill::before{
+    content:"";
+    position:absolute; top:-1px; left:18px; right:18px; height:5px;
+    background:var(--red);
+    border-radius:0 0 3px 3px;
+  }
+  .bill .when{ font-size:12px; color:var(--ink-soft); letter-spacing:.06em; }
+  .bill h3{ font-size:16px; font-weight:700; margin:4px 0 14px; }
+  .bill ul{ list-style:none; font-size:13.5px; }
+  .bill li{
+    display:flex; justify-content:space-between;
+    padding:5px 0;
+    border-bottom:1px dotted var(--line);
+    color:var(--ink-soft);
+  }
+  .bill li:last-child{ border-bottom:none; }
+  .bill li b{ color:var(--ink); font-weight:600; }
+  .bill .sum{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:12px; padding-top:12px;
+    border-top:2px solid var(--ink);
+    font-size:13px;
+  }
+  .bill .sum strong{ font-size:20px; font-weight:800; color:var(--red); }
+  .bill .save{ font-size:11.5px; color:var(--ink-soft); margin-top:6px; text-align:right; }
+
+  .total{
+    margin-top:16px;
+    background:var(--red);
+    color:#fff;
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .total span{ font-size:13px; letter-spacing:.06em; color:rgba(255,255,255,.8); }
+  .total strong{ font-size:26px; font-weight:800; }
+  .total strong small{ font-size:14px; margin-right:2px; }
+
+  /* ── 麦满分榜 ───────────────────────────────────── */
+  .board{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 22px 16px;
+  }
+  .criterion{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    background:#FBF6EA;
+    border-left:3px solid var(--yellow);
+    padding:9px 12px;
+    border-radius:0 6px 6px 0;
+    margin-bottom:20px;
+    line-height:1.6;
+  }
+  .criterion code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12px; background:#fff; padding:1px 5px; border-radius:3px;
+    border:1px solid #EDE6D6; color:var(--red-deep);
+  }
+  .row{
+    display:grid;
+    grid-template-columns:150px 1fr 52px;
+    align-items:center;
+    gap:12px;
+    padding:6px 0;
+    font-size:13px;
+  }
+  .row .nm{ text-align:right; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .bar-track{ background:#F4F0E8; border-radius:3px; height:16px; position:relative; overflow:hidden; }
+  .row .bar{ height:100%; border-radius:3px; background:var(--gray); }
+  .row .val{ font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
+  .row.best .nm{ color:var(--ink); font-weight:700; }
+  .row.best .bar{ background:var(--red); }
+  .row.best .val{ color:var(--red); font-weight:700; }
+  .row.miss .nm{ color:#B9B0A4; }
+  .row.miss .bar{ background:#E4DDD0; }
+
+  /* ── 回忆录 ────────────────────────────────────── */
+  .quote{
+    background:var(--ink);
+    color:#F5EFE4;
+    border-radius:14px;
+    padding:32px 34px;
+    position:relative;
+  }
+  .quote::before{
+    content:"“";
+    position:absolute; top:6px; left:18px;
+    font-size:64px; color:var(--yellow); opacity:.5;
+    font-family:Georgia,serif; line-height:1;
+  }
+  .quote p{ font-size:16.5px; line-height:1.85; position:relative; z-index:1; }
+  .quote .meta{
+    margin-top:18px; padding-top:16px;
+    border-top:1px solid rgba(245,239,228,.15);
+    font-size:12.5px; color:rgba(245,239,228,.55);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .quote .meta em{ font-style:normal; color:var(--yellow); }
+
+  .people{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+  .person{
+    background:var(--card); border:1px solid var(--line);
+    border-radius:12px; padding:16px 18px;
+  }
+  .person h4{ font-size:14px; font-weight:800; margin-bottom:6px; }
+  .person h4 span{
+    font-size:11px; font-weight:600; color:var(--red);
+    background:#FDEDEB; padding:1px 7px; border-radius:20px; margin-left:6px;
+    vertical-align:2px;
+  }
+  .person p{ font-size:12.5px; color:var(--ink-soft); line-height:1.7; }
+
+  /* ── 页脚 ──────────────────────────────────────── */
+  footer{
+    margin-top:64px;
+    background:var(--ink);
+    color:rgba(245,239,228,.6);
+    padding:40px 0;
+    font-size:12.5px;
+  }
+  footer .wrap{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+  footer b{ color:var(--yellow); font-weight:700; }
+  footer .note{ max-width:460px; line-height:1.7; }
+
+  /* ── 窄屏 ──────────────────────────────────────── */
+  @media (max-width:720px){
+    .hero{ padding:44px 0 40px; }
+    .hero h1{ font-size:30px; }
+    .stats{ grid-template-columns:1fr 1fr; margin-top:-24px; }
+    .stat{ border-bottom:1px solid var(--line); }
+    .stat:nth-child(2){ border-right:none; }
+    .stat:nth-child(3),.stat:nth-child(4){ border-bottom:none; }
+    .bills{ grid-template-columns:1fr; }
+    .people{ grid-template-columns:1fr; }
+    .row{ grid-template-columns:104px 1fr 46px; font-size:12px; }
+    .row .nm{ font-size:11px; }
+    .quote{ padding:26px 22px; }
+    .quote p{ font-size:14.5px; }
+    .sec-head h2{ font-size:19px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ 顶部 ══════════════════════════════════════════ -->
+<header class="hero">
+  <div class="wrap">
+    <div class="tag">21 天 · 3 个人 · 1 间屋</div>
+    <h1>麦麦自习室<br><em>2026.10.26 — 11.15</em></h1>
+    <p>一群朋友把 WorkBuddy 的一个项目当自习室，每天打卡、互相问题。坚持到一个阶段，就换一顿麦当劳。</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ══ 数字 ═══════════════════════════════════════ -->
+  <div class="stats">
+    <div class="stat">
+      <div class="n">19<small>/21</small></div>
+      <div class="k">有人打卡的天数</div>
+    </div>
+    <div class="stat">
+      <div class="n">57<small>人次</small></div>
+      <div class="k">完成 41 · 算完成 9</div>
+    </div>
+    <div class="stat">
+      <div class="n">11<small>天</small></div>
+      <div class="k">最长连续（10-30 起）</div>
+    </div>
+    <div class="stat">
+      <div class="n">214.5<small>元</small></div>
+      <div class="k">吃掉 2 顿麦麦</div>
+    </div>
+  </div>
+
+  <!-- ══ 打卡 ═══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">01</span>
+      <h2>这 21 天是怎么走过来的</h2>
+    </div>
+    <p class="sec-sub">每一格是一个人一天。空格不是没记录，是那天没人交。</p>
+
+    <div class="heat">
+      <div class="heat-scroll">
+        <div class="heat-grid" id="heat"></div>
+      </div>
+      <div class="legend">
+        <span><i class="c1"></i>完成</span>
+        <span><i class="c2"></i>算完成</span>
+        <span><i class="c3"></i>请假</span>
+        <span><i class="c4"></i>未完成</span>
+        <span><i class="c0"></i>没交</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 账单 ═══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">02</span>
+      <h2>说好的那两顿</h2>
+    </div>
+    <p class="sec-sub">两个全勤阶段，两顿。券是当着大家的面配的，钱是算准了才点的。</p>
+
+    <div class="bills">
+      <div class="bill">
+        <div class="when">11-09 周一 · 第一次聚餐</div>
+        <h3>第一次全勤阶段结束</h3>
+        <ul>
+          <li><b>麦辣鸡腿堡</b><span>×2</span></li>
+          <li><b>大薯条</b><span>×1</span></li>
+          <li><b>巨无霸</b><span>×1</span></li>
+          <li><b>中杯可乐</b><span>×3</span></li>
+        </ul>
+        <div class="sum"><span>实付</span><strong>¥108.5</strong></div>
+        <div class="save">原价 122 · 用券省 13.5</div>
+      </div>
+
+      <div class="bill">
+        <div class="when">11-15 周日 · 考完那天</div>
+        <h3>最后一场考试结束</h3>
+        <ul>
+          <li><b>麦辣鸡腿堡</b><span>×2</span></li>
+          <li><b>麦乐鸡（5 块）</b><span>×2</span></li>
+          <li><b>中薯条</b><span>×2</span></li>
+          <li><b>麦旋风</b><span>×2</span></li>
+        </ul>
+        <div class="sum"><span>实付</span><strong>¥106.0</strong></div>
+        <div class="save">原价 128 · 用券省 22</div>
+      </div>
+    </div>
+
+    <div class="total">
+      <span>两顿合计 · 点得最多的是麦辣鸡腿堡（4 次）</span>
+      <strong><small>¥</small>214.5</strong>
+    </div>
+  </section>
+
+  <!-- ══ 麦满分 ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">03</span>
+      <h2>考前那份麦满分，是算出来的</h2>
+    </div>
+    <p class="sec-sub">用公开的营养字段做一个近似：碳水热占比越低，越不容易吃完就犯困。</p>
+
+    <div class="board">
+      <div class="criterion">
+        判据三条同时满足：蛋白质 ≥ 20 g、碳水热占比 ≤ 28%、热量 ≥ 300 kcal。<br>
+        其中 <code>碳水热占比 = 碳水(g) × 4 ÷ 热量(kcal)</code>。数据来自 <code>list-nutrition-foods</code> 的 160 项实时营养表。
+      </div>
+      <div id="board"></div>
+    </div>
+  </section>
+
+  <!-- ══ 回忆录 ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head">
+      <span class="idx">04</span>
+      <h2>最后它写了一份回忆录</h2>
+    </div>
+    <p class="sec-sub">不是总结，是拣出有画面的那几件事。每句都来自那天有人真的写下来过。</p>
+
+    <div class="quote">
+      <p>10-28，第 7 题：小A 卡在夹逼那道题上四十分钟，中途说「我是不是不适合学数学」。第二天自己把那题做出来了，还说了一句「原来就是没想到拿 1/n 当上界」。</p>
+      <div class="meta">
+        <span>摘自 <em>day-03-20261028/记录.md</em></span>
+        <span>第 3 天</span>
+      </div>
+    </div>
+
+    <div class="people">
+      <div class="person">
+        <h4>小A<span>稳</span></h4>
+        <p>19 天里有 19 天是自己先开口的那个，从不拖到最后一刻，卡住也不假装懂了。</p>
+      </div>
+      <div class="person">
+        <h4>小B<span>后劲足</span></h4>
+        <p>前一周掉了两次，被点名之后一次没缺，最后连续 9 天，收尾最漂亮。</p>
+      </div>
+      <div class="person">
+        <h4>小C<span>进步最快</span></h4>
+        <p>会的不算多，但每道不会的都真去问了，问得比谁都细。第二顿他坚持要两份薯条。</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ══ 页脚 ══════════════════════════════════════════ -->
+<footer>
+  <div class="wrap">
+    <div class="note">
+      <b>麦麦自习室</b> · 麦当劳程序员节创意开发大赛参赛作品，非麦当劳官方产品。<br>
+      本页为 21 天实录的演示数据，真实数据只存在于各自的 WorkBuddy 项目里。
+    </div>
+    <div>
+      腾讯 WorkBuddy<br>
+      <span style="opacity:.5">mcd-study-room</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════════════
+   打卡数据
+   每天三个字符，顺序是 小A 小B 小C
+   1 完成 / 2 算完成 / 3 请假 / 4 未完成 / 0 没交
+   合计：完成 41 · 算完成 9 · 请假 5 · 未完成 2 = 57 人次
+   空档两天（10-29、11-10）→ 有人打卡的天数 19，
+   最长连续 11 天（10-30 → 11-09），与 templates/回忆录.md 一致
+   ══════════════════════════════════════════════════ */
+const DAYS = [
+  "111","112","121","000","131","132","211",   // 10-26 → 11-01（第 7 天小A算完成）
+  "111","111","124","111","113","111","221",   // 11-02 → 11-08
+  "111","000","121","142","113","131","111"    // 11-09 → 11-15（11-10 全员没交）
+];
+
+const PEOPLE = ["小A","小B","小C"];
+const STATE  = { 1:"完成", 2:"算完成", 3:"请假", 4:"未完成", 0:"没交" };
+
+/* 从 2026-10-26 开始生成日期标签 */
+function dateLabel(i){
+  const d = new Date(2026, 9, 26 + i);          // 月份 0-based，9 月即 10 月
+  const mm = String(d.getMonth() + 1).padStart(2,"0");
+  const dd = String(d.getDate()).padStart(2,"0");
+  return mm + "-" + dd;
+}
+
+/* ── 画热力图 ──────────────────────────────────── */
+(function buildHeat(){
+  const grid = document.getElementById("heat");
+  const frag = document.createDocumentFragment();
+
+  // 工具：造一个元素并钉到指定格（grid 是 1-based）
+  function put(row, col, cls, text, tip){
+    const el = document.createElement("div");
+    el.className = cls;
+    el.style.gridRow = row;
+    el.style.gridColumn = col;
+    if (text) el.textContent = text;
+    if (tip) el.title = tip;
+    frag.appendChild(el);
+    return el;
+  }
+
+  // 第 1 列：人名的表头（留空）+ 三个人
+  put(1, 1, "lbl", "");
+  PEOPLE.forEach(function(name, p){
+    put(p + 2, 1, "lbl name", name);
+  });
+  put(5, 1, "lbl", "");
+
+  // 第 2 列起：一天一列
+  for (let i = 0; i < DAYS.length; i++){
+    const col = i + 2;
+
+    put(1, col, "dt",
+        (i % 5 === 0 || i === DAYS.length - 1) ? dateLabel(i) : "");
+
+    for (let p = 0; p < 3; p++){
+      const s = DAYS[i][p];
+      put(p + 2, col, "cell c" + s, "",
+          "第 " + (i + 1) + " 天 " + dateLabel(i) + " · " + PEOPLE[p] + "：" + STATE[s]);
+    }
+
+    put(5, col, "lbl",
+        (i + 1) % 5 === 0 ? "D" + (i + 1) : "");
+  }
+
+  grid.appendChild(frag);
+
+  // Day 标签要小一号、居中——统一处理，避免逐个写样式
+  grid.querySelectorAll(".lbl").forEach(function(el){
+    if (/^D\d+$/.test(el.textContent)){
+      el.style.justifyContent = "center";
+      el.style.fontSize = "9px";
+    }
+  });
+})();
+
+/* ── 画麦满分榜 ────────────────────────────────── */
+const MFM = [
+  { n:"双层猪柳蛋麦满分",          kcal:513, pro:29, carb:26, r:20.3, hit:true  },
+  { n:"猪柳蛋麦满分",              kcal:387, pro:23, carb:25, r:25.8, hit:true  },
+  { n:"双层火腿扒麦满分",          kcal:385, pro:21, carb:26, r:27.0, hit:true  },
+  { n:"双层原味板烧鸡腿麦满分",    kcal:355, pro:23, carb:27, r:30.4, hit:false },
+  { n:"猪柳麦满分",                kcal:308, pro:16, carb:24, r:31.2, hit:false },
+  { n:"火腿扒麦满分",              kcal:261, pro:14, carb:24, r:36.8, hit:false },
+  { n:"烟肉蛋麦满分",              kcal:260, pro:16, carb:24, r:36.9, hit:false },
+  { n:"大脆鸡扒麦满分",            kcal:361, pro:16, carb:35, r:38.8, hit:false },
+  { n:"原味板烧鸡腿麦满分",        kcal:246, pro:15, carb:25, r:40.7, hit:false }
+  // 「hit」= 三条判据全中的那三款，标红；蛋白不达 20g 的整行压灰
+];
+
+(function buildBoard(){
+  const box = document.getElementById("board");
+  const max = 42;                       // 轴上限，比最大值 40.7 略大，留一点边
+  MFM.forEach(function(it){
+    const row = document.createElement("div");
+    row.className = "row" + (it.hit ? " best" : "") + (it.pro < 20 ? " miss" : "");
+    row.title = `${it.n}：${it.kcal} kcal / 蛋白 ${it.pro} g / 碳水 ${it.carb} g`;
+
+    const nm = document.createElement("div");
+    nm.className = "nm";
+    nm.textContent = it.n;
+
+    const track = document.createElement("div");
+    track.className = "bar-track";
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.width = (it.r / max * 100).toFixed(1) + "%";
+    track.appendChild(bar);
+
+    const val = document.createElement("div");
+    val.className = "val";
+    val.textContent = it.r.toFixed(1) + "%";
+
+    row.appendChild(nm);
+    row.appendChild(track);
+    row.appendChild(val);
+    box.appendChild(row);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,9 +1,14 @@
 files/
 
-自习室/
+*sample*.jsonl
 
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-*.egg-info/
+
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
