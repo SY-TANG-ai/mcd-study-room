@@ -4,6 +4,12 @@
 
 ---
 
+*献给*
+
+*麦当劳深圳南海中心餐厅，和所有跟我一起在这里聚过餐的朋友们* :heartpulse: :hamburger:
+
+---
+
 ## 这是什么
 
 利用 WorkBuddy 的"项目"功能，把"项目"变成一个"共享自习室"。
@@ -226,6 +232,6 @@ python skills/maimai-butler/scripts/sample_corpus.py --seed 7   # 复现某一�
 
 ## 最后
 
-> 考试是你一个人的，但这二十一天可以不是。
+> 考试是你一个人的，但这条备考路可以不是。
 
 MIT License © 2026 Shuyi
