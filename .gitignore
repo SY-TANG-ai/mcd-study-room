@@ -1,0 +1,9 @@
+files/
+
+自习室/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
